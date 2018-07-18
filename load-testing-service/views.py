@@ -6,7 +6,7 @@ import matplotlib
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-import LoadTest as lt
+from LoadTest import *
 
 matplotlib.use('Agg')
 from django.http import FileResponse
@@ -194,12 +194,12 @@ def start_test(request):
         proxy = None
 
     # start the load test
-    test = lt.LoadTest(url, concurrent_num, method, header, payload, timeout, proxy, parameters_list, test_id)
+    test = LoadTest(url, concurrent_num, method, header, payload, timeout, proxy, parameters_list, test_id)
     test.startTest()
 
     # put the reference of the object into a global dictionary
     # the reference is used in case of user want to stop the load test
-    running_tests[test_id] = test
+    # running_tests[test_id] = test
 
     response_data = {'status': 'running'}
     return produce_success_response(response_data)
@@ -208,7 +208,8 @@ def start_test(request):
 @csrf_exempt
 def stop_test(request):
     test_id = int(request.GET.get('testId'))
-    test = running_tests[test_id]
-    test.stopTest()
+    # test = running_tests[test_id]
+    # test.stopTest()
+    LoadTest.stop_test(test_id)
     response_data = {'status': 'stopped'}
     return produce_success_response(response_data)

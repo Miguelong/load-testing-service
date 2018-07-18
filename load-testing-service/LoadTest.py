@@ -20,6 +20,9 @@ class LoadTest:
     # temp dir where generated report and images are placed
     TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'temp')
 
+    # store the stop flags of tests
+    STOP_SETTING = {}
+
     def __init__(self, url, concurrent_num, method, header, payload, timeout, proxy, parameters_list, test_id):
         self.url = url
         self.concurrent_num = concurrent_num
@@ -34,7 +37,8 @@ class LoadTest:
         self.begin_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         # tmsp is used in the file names
         self.tmsp = time.strftime("%Y%m%d%H%M%S", time.localtime())
-        self.stop = False
+        # self.stop = False
+        self.STOP_SETTING[test_id] = False
 
 
     def statistic(self, title, queue, document):
@@ -224,7 +228,8 @@ class LoadTest:
         parameters_count = url_template.count('${')
         for parameters in parametersList:
             # in case of user stop the test
-            if self.stop:
+            # if self.stop:
+            if self.STOP_SETTING[self.test_id]:
                 break
 
             list = json.loads(parameters)
@@ -244,7 +249,8 @@ class LoadTest:
         parameters_count = payload_template.count('${')
         for parameters in parametersList:
             # in case of user stop the test
-            if self.stop:
+            # if self.stop:
+            if self.STOP_SETTING[self.test_id]:
                 break
 
             list = json.loads(parameters)
@@ -268,7 +274,8 @@ class LoadTest:
         progress = 0.0
         while progress < 100.0:
             # in case of user stop the test
-            if self.stop:
+            # if self.stop:
+            if self.STOP_SETTING[self.test_id]:
                 break
 
             time.sleep(3)
@@ -411,5 +418,6 @@ class LoadTest:
         t.start()
         threads.append(t)
 
-    def stopTest(self):
-        self.stop = True
+    @classmethod
+    def stop_test(cls, test_id):
+        cls.STOP_SETTING[test_id] = True
