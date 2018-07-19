@@ -2,9 +2,5 @@
 .DS_Store
 temp/*
 .idea/*
+
 *.pyc
-*.pyc
-load-testing-service/LoadTest.pyc
-load-testing-service/LoadTest.pyc
-load-testing-service/views.pyc
-load-testing-service/LoadTest.pyc

@@ -342,11 +342,6 @@ class LoadTest:
         document.add_heading('Fail ', 1)
         self.outputFails(failQueue, document)
 
-        # print >> result
-
-        # print >> result, "end:", end_time
-
-        # result.close()
         doc = str(self.test_id) + '_' + self.tmsp + '.docx'
         document.save(os.path.join(self.TEMP_DIR, doc))
 
@@ -367,20 +362,6 @@ class LoadTest:
 
 
     def startTest(self):
-        # result = open("result_" + str(self.concurrent_num) + "_" + self.tmsp + ".txt", 'w+')
-
-        # print >> result, "Concurrent threads:", str(self.concurrent_num)
-        # print >> result, "Url:", self.url
-        # print >> result, "Method:", self.method
-        # if self.proxy is not None:
-        #     print >> result, "Proxy:", self.proxy
-        # if self.header is not None:
-        #     print >> result, "Header:", self.header
-        # print >> result
-        #
-        # print >> result, "begin:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        # print >> result
-
         ##split parameters for each thread
         parameters = []
         total_num = len(self.parameters_list)
