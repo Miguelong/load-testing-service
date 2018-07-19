@@ -322,16 +322,16 @@ class LoadTest:
         paragraph = document.add_paragraph('')
         run = paragraph.add_run('Concurrent threads: ' + str(self.concurrent_num) + '\n')
         run.font.size = Pt(12)
-        run = paragraph.add_run('Url: ' + self.url)
+        run = paragraph.add_run('Url: ' + self.url + '\n')
         run.font.size = Pt(12)
         if self.payload is not None:
-            run = paragraph.add_run('Payload: ' + self.payload)
+            run = paragraph.add_run('Payload: ' + self.payload + '\n')
             run.font.size = Pt(12)
         if self.header is not None:
-            run = paragraph.add_run('Header: ' + self.header)
+            run = paragraph.add_run('Header: ' + self.header + '\n')
             run.font.size = Pt(12)
         if self.proxy is not None:
-            run = paragraph.add_run('Proxy: ' + self.proxy)
+            run = paragraph.add_run('Proxy: ' + self.proxy + '\n')
             run.font.size = Pt(12)
 
         document.add_heading('Statistics', 1)
