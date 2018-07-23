@@ -150,14 +150,14 @@ class LoadTest:
             run = paragraph.add_run(str(interval_count) + '\n' + detail + '\n')
             run.font.size = Pt(12)
 
-    def outputFails(self, queue, document):
-        paragraph = document.add_paragraph('')
+    def output_fails(self, queue, document):
+        if queue.empty():
+            return
 
-        if not queue.empty():
-            # print >> file, "------------------------------------------------------------------------------------"
-            # print >> file, "Fail: ", queue.qsize()
-            run = paragraph.add_run('total:' + str(queue.qsize()))
-            run.font.size = Pt(12)
+        document.add_heading('Fail ', 1)
+        paragraph = document.add_paragraph('')
+        run = paragraph.add_run('total:' + str(queue.qsize()))
+        run.font.size = Pt(12)
 
         dict = {}
         while not queue.empty():
@@ -377,8 +377,7 @@ class LoadTest:
         self.statistic('Timeout', timeoutQueue, document)
 
         # output fails
-        document.add_heading('Fail ', 1)
-        self.outputFails(failQueue, document)
+        self.output_fails(failQueue, document)
 
         # set the file name and save it to temp dir
         doc = str(self.test_id) + '_' + self.tmsp + '.docx'
