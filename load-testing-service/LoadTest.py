@@ -12,6 +12,7 @@ import requests
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import pylab as pl
 from docx import Document
 from docx.shared import Pt
 
@@ -20,7 +21,7 @@ class LoadTest:
     # temp dir where generated report and images are placed
     TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'temp')
 
-    # store the stop flags of tests
+    # dictionary store the stop flags of tests, the key is test_id
     STOP_SETTING = {}
 
     def __init__(self, url, concurrent_num, method, header, payload, timeout, proxy, parameters_list, test_id):
@@ -35,11 +36,12 @@ class LoadTest:
         self.test_id = test_id
         # load test begins
         self.begin_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        # load test starts
+        self.start = time.time()
         # tmsp is used in the file names
         self.tmsp = time.strftime("%Y%m%d%H%M%S", time.localtime())
         # self.stop = False
         self.STOP_SETTING[test_id] = False
-
 
     def statistic(self, title, queue, document):
         dict = {}
@@ -48,13 +50,18 @@ class LoadTest:
         max = 0.0
         min = 100.0
         data = []
+        response_time_trend = []
         if queue.empty():
             return
 
         document.add_heading(title + ': ' + str(queue.qsize()), 2)
 
+        # count the sum of requests of each response time
+        # get the trend of response time
         while not queue.empty():
-            total_seconds = round(queue.get(), 2)
+            element = queue.get()
+            total_seconds = round(element[1], 2)
+            response_time_trend.append(element)
             data.append(total_seconds)
             if dict.has_key(total_seconds):
                 dict[total_seconds] = dict[total_seconds] + 1
@@ -75,6 +82,7 @@ class LoadTest:
         items = dict.items()
         items.sort()
 
+        # draw figure of X-'Response time' Y-'Count'
         bins = int((max - min) / 0.01)
         if bins == 0:
             bins = 1
@@ -87,8 +95,24 @@ class LoadTest:
         img = str(self.test_id) + "_" + self.tmsp + '_' + title + ".png"
         plt.savefig(os.path.join(self.TEMP_DIR, img))
         plt.close()
-
+        # add figure to document
         document.add_picture(os.path.join(self.TEMP_DIR, img))
+
+        # draw figure of X-'Request start' Y-'Response time'
+        response_time_trend.sort()
+        x = []
+        y = []
+        for ele in response_time_trend:
+            x.append(ele[0])
+            y.append(ele[1])
+        pl.plot(x, y, 'b')
+        pl.plot(x, y, 'rd')
+
+        img = str(self.test_id) + "_" + self.tmsp + '_' + title + "_trend.png"
+        pl.savefig(os.path.join(self.TEMP_DIR, img))
+        pl.close()
+
+
         paragraph = document.add_paragraph('')
         run = paragraph.add_run('max:' + str(max) + ' min:' + str(min) + ' average:' + str(average) + '\n\n')
         run.font.size = Pt(12)
@@ -158,28 +182,31 @@ class LoadTest:
             run.font.size = Pt(12)
 
     def request_get(self, url):
+        request_start = round(time.time()-self.start)
         try:
             # r = requests.get(url, timeout=timeout)
             r = requests.get(url)
             json = r.json()
             code = json['meta']['code']
             total_seconds = r.elapsed.total_seconds()
-            return (None, code, total_seconds)
+            return (None, code, total_seconds, request_start)
         except Exception, e:
             return (e, None, None)
 
     def request_post(self, url, payload):
+        request_start = round(time.time() - self.start)
         try:
             # r = requests.post(url, json=payload, timeout=timeout)
             r = requests.post(url, json=payload)
             json = r.json()
             code = json['meta']['code']
             total_seconds = r.elapsed.total_seconds()
-            return (None, code, total_seconds)
+            return (None, code, total_seconds,request_start)
         except Exception, e:
             return (e, None, None)
 
     def request_get_proxy(self, url):
+        request_start = round(time.time() - self.start)
         try:
             if self.header is None:
                 cmd = "curl -w 'time_total: %{time_total}\n' '" + url + "' -H 'Content-Type:application/json' --proxy " + self.proxy
@@ -190,11 +217,12 @@ class LoadTest:
             index = res.find('time_total')
             code = json.loads(res[0:index])['meta']['code']
             total_seconds = float(res[index + 12:].replace("\n", ""))
-            return (None, code, total_seconds)
+            return None, code, total_seconds, request_start
         except Exception, e:
-            return (e, None, None)
+            return e, None, None
 
     def request_post_proxy(self, url, payload):
+        request_start = round(time.time() - self.start)
         try:
             if self.header is None:
                 cmd = "curl -w 'time_total: %{time_total}\n' '" + url + "' -X POST -H 'Content-Type:application/json' -d '" + payload + "' --proxy " + self.proxy
@@ -205,20 +233,21 @@ class LoadTest:
             index = res.find('time_total')
             code = json.loads(res[0:index])['meta']['code']
             total_seconds = float(res[index + 12:].replace("\n", ""))
-            return (None, code, total_seconds)
+            return (None, code, total_seconds, request_start)
         except Exception, e:
             return (e, None, None)
 
-    def processResponse(self, res, timeout, successQueue, timeoutQueue, failQueue, parameters):
+    def process_response(self, res, timeout, successQueue, timeoutQueue, failQueue, parameters):
         e = res[0]
         code = res[1]
         total_seconds = res[2]
         if e is None:
+            request_start = res[3]
             if code == 200:
                 if total_seconds > timeout:
-                    timeoutQueue.put(total_seconds)
+                    timeoutQueue.put((request_start, total_seconds))
                 else:
-                    successQueue.put(total_seconds)
+                    successQueue.put((request_start, total_seconds))
             else:
                 failQueue.put(("code " + str(code), parameters))
         else:
@@ -233,17 +262,17 @@ class LoadTest:
             if self.STOP_SETTING[self.test_id]:
                 break
 
-            list = json.loads(parameters)
+            parameter_list = json.loads(parameters)
             url = url_template
             for i in range(parameters_count):
                 old = '${' + str(i) + '}'
-                new = list[i]
+                new = parameter_list[i]
                 url = url.replace(old, new)
             if self.proxy is None:
                 res = self.request_get(url)
             else:
                 res = self.request_get_proxy(url)
-            self.processResponse(res, timeout, successQueue, timeoutQueue, failQueue, parameters)
+            self.process_response(res, timeout, successQueue, timeoutQueue, failQueue, parameters)
 
     def testPost(self, url, payload_template, timeout, successQueue, timeoutQueue, failQueue, parametersList):
         # get count of parameters of the payload
@@ -266,7 +295,7 @@ class LoadTest:
             else:
                 res = self.request_post_proxy(url, payload)
 
-            self.processResponse(res, timeout, successQueue, timeoutQueue, failQueue, parameters)
+            self.process_response(res, timeout, successQueue, timeoutQueue, failQueue, parameters)
 
     def getProgress(self, total_num, successQueue, timeoutQueue, failQueue):
         db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
@@ -291,7 +320,6 @@ class LoadTest:
                 print repr(e)
                 db.rollback()
 
-
         if progress == 100.0:
             status = 'completed'
         else:
@@ -306,12 +334,14 @@ class LoadTest:
 
         db.close()
 
-        self.getResult(successQueue, timeoutQueue, failQueue)
+        self.get_report(successQueue, timeoutQueue, failQueue)
 
-    def getResult(self, successQueue, timeoutQueue, failQueue,):
+    # get report of load test
+    def get_report(self, successQueue, timeoutQueue, failQueue, ):
         end_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         document = Document()
 
+        # its begin time and end time
         document.add_heading('Report', 0)
         paragraph = document.add_paragraph('')
         run = paragraph.add_run('begin: ' + self.begin_time + '\n')
@@ -319,6 +349,7 @@ class LoadTest:
         run = paragraph.add_run('end: ' + end_time)
         run.font.size = Pt(12)
 
+        # testing parameters
         document.add_heading('Testing Parameters', 1)
         paragraph = document.add_paragraph('')
         run = paragraph.add_run('Concurrent threads: ' + str(self.concurrent_num) + '\n')
@@ -335,24 +366,25 @@ class LoadTest:
             run = paragraph.add_run('Proxy: ' + self.proxy + '\n')
             run.font.size = Pt(12)
 
+        # statistics of test
         document.add_heading('Statistics', 1)
-
         self.statistic('Success', successQueue, document)
         self.statistic('Timeout', timeoutQueue, document)
 
+        # output fails
         document.add_heading('Fail ', 1)
         self.outputFails(failQueue, document)
 
+        # set the file name and save it to temp dir
         doc = str(self.test_id) + '_' + self.tmsp + '.docx'
         document.save(os.path.join(self.TEMP_DIR, doc))
 
-
-        db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
-        cursor = db.cursor()
-        sql = "update load_test set report='%s' where id='%s'" % \
-              (doc, str(self.test_id))
-
+        # update field 'report' of the record
         try:
+            db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+            cursor = db.cursor()
+            sql = "update load_test set report='%s' where id='%s'" % \
+                  (doc, str(self.test_id))
             cursor.execute(sql)
             db.commit()
         except Exception,e:

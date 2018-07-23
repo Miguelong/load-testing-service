@@ -53,19 +53,24 @@ def setup(request):
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
-    insertSql="insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy, parameters)" \
-              " values('%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s')" % \
-              (user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read()))
+    # insertSql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy, parameters)" \
+    #             " values('%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s')" % \
+    #             (user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy,
+    #              MySQLdb.Binary(parameters.read()))
+
+    insertSql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy, parameters)" \
+                " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
 
     try:
-        cursor.execute(insertSql)
+        cursor.execute(insertSql, [user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read())])
         test_id = int(db.insert_id())
         print test_id
         db.commit()
 
     except Exception, e:
-        errMessage = repr(e)
-        print errMessage
+        error = repr(e)
+        print error
         db.rollback()
 
     db.close()
@@ -73,11 +78,12 @@ def setup(request):
     response_data = {}
 
     if test_id is None:
-        response_data['errMessage'] = errMessage
+        response_data['error'] = error
         return produce_fail_response(response_data)
     else:
         response_data['testId'] = test_id
         return produce_success_response(response_data)
+
 
 @csrf_exempt
 def update_test_case(request):
@@ -104,25 +110,25 @@ def update_test_case(request):
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
-    updateSql = "update load_test set user='%s',testName='%s',description='%s',apiUrl='%s',concurrentNum='%s',apiMethod='%s'," \
-                "apiHeader='%s',apiPayload='%s',apiTimeout='%s',apiProxy='%s', parameters='%s' where id='%s' " % \
-                (user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read()), id)
+    update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s,apiMethod=%s," \
+                 "apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s, parameters=%s where id=%s"
 
     try:
-        cursor.execute(updateSql)
+        cursor.execute(update_sql,
+                       [user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy,
+                        MySQLdb.Binary(parameters.read()), id])
         db.commit()
 
     except Exception, e:
-        errMessage = repr(e)
-        print errMessage
+        error = repr(e)
+        print error
         db.rollback()
+        response_data = {'error': error}
+        return produce_fail_response(response_data)
 
     db.close()
 
-    response_data = {}
-
-
-    response_data['testId'] = id
+    response_data = {'testId': id}
     return produce_success_response(response_data)
 
 
@@ -131,7 +137,7 @@ def get_all_cases(request):
     data = json.loads(request.body)
     page = int(data.get('pagination').get('page'))
     perPage = int(data.get('pagination').get('perPage'))
-    start = perPage*(page-1)
+    start = perPage * (page - 1)
     print start
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
@@ -139,22 +145,22 @@ def get_all_cases(request):
 
     cursor.execute("select count(*) from load_test")
     res = cursor.fetchone()
-    totalSize= int(res[0])
+    totalSize = int(res[0])
 
-    sql = "select id,user,testName,status,progress from load_test order by id limit "+str(start)+","+str(perPage)
+    sql = "select id,user,testName,status,progress from load_test order by id limit " + str(start) + "," + str(perPage)
     cursor.execute(sql)
     results = cursor.fetchall()
-    response_data={}
-    list=[]
+    response_data = {}
+    list = []
     for row in results:
-        id=row[0]
-        user=row[1]
-        testName=row[2]
-        status=row[3]
-        progress=row[4]
+        id = row[0]
+        user = row[1]
+        testName = row[2]
+        status = row[3]
+        progress = row[4]
         list.append({"testId": id, "user": user, "testName": testName, "status": status, "progress": progress})
 
-    response_data={"list": list, "pagination": {"totalSize": totalSize}}
+    response_data = {"list": list, "pagination": {"totalSize": totalSize}}
 
     db.close()
     return produce_success_response(response_data)
@@ -165,9 +171,9 @@ def download_report(request):
     test_id = request.GET.get('testId')
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
-    cursor.execute("select report from load_test where id="+str(test_id))
-    res=cursor.fetchone()
-    report=res[0]
+    cursor.execute("select report from load_test where id=" + str(test_id))
+    res = cursor.fetchone()
+    report = res[0]
 
     file = open(os.path.join(TEMP_DIR, report), 'rb')
     response = FileResponse(file)
@@ -186,7 +192,7 @@ def start_test(request):
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
     try:
-        cursor.execute("select status from load_test where id="+str(test_id))
+        cursor.execute("select status from load_test where id=" + str(test_id))
         res = cursor.fetchone()
         status = res[0]
         # if the test is already running leave it
@@ -194,7 +200,7 @@ def start_test(request):
             response_data = {'error': 'The test case is already running. Please wait until it is completed.'}
             return produce_fail_response(response_data)
 
-        cursor.execute("update load_test set progress=0.0, status='running' where id="+str(test_id))
+        cursor.execute("update load_test set progress=0.0, status='running' where id=" + str(test_id))
         db.commit()
     except Exception, e:
         print repr(e)
@@ -204,7 +210,7 @@ def start_test(request):
 
     # get configuration of the test
     sql = "select apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy,parameters,report " \
-          "from load_test where id="+str(test_id)
+          "from load_test where id=" + str(test_id)
     cursor.execute(sql)
     res = cursor.fetchone()
     url = res[0]
