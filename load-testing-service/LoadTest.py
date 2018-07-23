@@ -105,8 +105,8 @@ class LoadTest:
         for ele in response_time_trend:
             x.append(ele[0])
             y.append(ele[1])
-        pl.plot(x, y, 'b')
-        pl.plot(x, y, 'rd')
+        pl.plot(x, y, '.')
+        # pl.plot(x, y, 'rd')
 
         img = str(self.test_id) + "_" + self.tmsp + '_' + title + "_trend.png"
         pl.savefig(os.path.join(self.TEMP_DIR, img))
