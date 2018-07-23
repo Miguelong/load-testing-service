@@ -182,7 +182,8 @@ class LoadTest:
             run.font.size = Pt(12)
 
     def request_get(self, url):
-        request_start = round(time.time()-self.start)
+        # request_start = round(time.time()-self.start)
+        request_start = time.time()-self.start
         try:
             # r = requests.get(url, timeout=timeout)
             r = requests.get(url)
@@ -194,7 +195,8 @@ class LoadTest:
             return (e, None, None)
 
     def request_post(self, url, payload):
-        request_start = round(time.time() - self.start)
+        # request_start = round(time.time() - self.start)
+        request_start = time.time() - self.start
         try:
             # r = requests.post(url, json=payload, timeout=timeout)
             r = requests.post(url, json=payload)
@@ -206,7 +208,8 @@ class LoadTest:
             return (e, None, None)
 
     def request_get_proxy(self, url):
-        request_start = round(time.time() - self.start)
+        # request_start = round(time.time() - self.start)
+        request_start = time.time() - self.start
         try:
             if self.header is None:
                 cmd = "curl -w 'time_total: %{time_total}\n' '" + url + "' -H 'Content-Type:application/json' --proxy " + self.proxy
@@ -222,7 +225,8 @@ class LoadTest:
             return e, None, None
 
     def request_post_proxy(self, url, payload):
-        request_start = round(time.time() - self.start)
+        # request_start = round(time.time() - self.start)
+        request_start = time.time() - self.start
         try:
             if self.header is None:
                 cmd = "curl -w 'time_total: %{time_total}\n' '" + url + "' -X POST -H 'Content-Type:application/json' -d '" + payload + "' --proxy " + self.proxy
