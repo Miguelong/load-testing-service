@@ -5,6 +5,8 @@ import MySQLdb
 import matplotlib
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+import traceback
+import sys
 
 from LoadTest import *
 
@@ -242,6 +244,7 @@ def start_test(request):
         except Exception, e:
             print os.path.join(TEMP_DIR, report)
             print repr(e)
+            traceback.print_exc(file=sys.stdout)
 
     # parameters_list is a list of parameters that the get or post request requires
     lines = parameters.split('\n')
