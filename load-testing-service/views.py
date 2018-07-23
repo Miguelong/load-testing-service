@@ -230,12 +230,17 @@ def start_test(request):
     if report is not None and report != '':
         prefix = report.split('.')[0]
         success_img = prefix + '_Success.png'
+        success_trend_img = prefix + '_trend_Success.png'
         timeout_img = prefix + '_Timeout.png'
+        timeout_trend_img = prefix + '_trend_Timeout.png'
         try:
             os.remove(os.path.join(TEMP_DIR, report))
             os.remove(os.path.join(TEMP_DIR, success_img))
+            os.remove(os.path.join(TEMP_DIR, success_trend_img))
             os.remove(os.path.join(TEMP_DIR, timeout_img))
+            os.remove(os.path.join(TEMP_DIR, timeout_trend_img))
         except Exception, e:
+            print os.path.join(TEMP_DIR, report)
             print repr(e)
 
     # parameters_list is a list of parameters that the get or post request requires
@@ -257,7 +262,7 @@ def start_test(request):
 
     # start the load test
     test = LoadTest(url, concurrent_num, method, header, payload, timeout, proxy, parameters_list, test_id)
-    test.startTest()
+    test.start_test()
 
     # put the reference of the object into a global dictionary
     # the reference is used in case of user want to stop the load test

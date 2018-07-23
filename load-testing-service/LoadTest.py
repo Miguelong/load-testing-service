@@ -302,7 +302,7 @@ class LoadTest:
 
             self.process_response(res, timeout, successQueue, timeoutQueue, failQueue, parameters)
 
-    def getProgress(self, total_num, successQueue, timeoutQueue, failQueue):
+    def get_progress(self, total_num, successQueue, timeoutQueue, failQueue):
         db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
         cursor = db.cursor()
 
@@ -398,9 +398,8 @@ class LoadTest:
 
         db.close()
 
-
-    def startTest(self):
-        ##split parameters for each thread
+    def start_test(self):
+        # split parameters for each thread
         parameters = []
         total_num = len(self.parameters_list)
         size = total_num / self.concurrent_num
@@ -432,7 +431,7 @@ class LoadTest:
             t.start()
             threads.append(t)
 
-        t = threading.Thread(target=self.getProgress, args=(total_num, successQueue, timeoutQueue, failQueue,))
+        t = threading.Thread(target=self.get_progress, args=(total_num, successQueue, timeoutQueue, failQueue,))
         t.setDaemon(True)
         t.start()
         threads.append(t)
