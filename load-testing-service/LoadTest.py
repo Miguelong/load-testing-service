@@ -86,6 +86,7 @@ class LoadTest:
 
         img = str(self.test_id) + "_" + self.tmsp + '_' + title + ".png"
         plt.savefig(os.path.join(self.TEMP_DIR, img))
+        plt.close()
 
         document.add_picture(os.path.join(self.TEMP_DIR, img))
         paragraph = document.add_paragraph('')
