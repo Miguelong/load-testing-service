@@ -140,11 +140,21 @@ def start_test(request):
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
     try:
+        cursor.execute("select status from load_test where id="+str(test_id))
+        res = cursor.fetchone()
+        status = res[0]
+        # if the test is already running leave it
+        if status == 'running':
+            response_data = {'error': 'The test case is already running.\nPlease wait until it is completed.'}
+            return produce_fail_response(response_data)
+
         cursor.execute("update load_test set progress=0.0, status='running' where id="+str(test_id))
         db.commit()
     except Exception, e:
         print repr(e)
         db.rollback()
+        response_data = {'stage': 'update status', 'error': repr(e)}
+        return produce_fail_response(response_data)
 
     # get configuration of the test
     sql = "select apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy,parameters,report " \
