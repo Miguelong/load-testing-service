@@ -382,7 +382,6 @@ class LoadTest:
         # set the file name and save it to temp dir
         doc = str(self.test_id) + '_' + self.tmsp + '.docx'
         document.save(os.path.join(self.TEMP_DIR, doc))
-        document.close()
 
         # update field 'report' of the record
         try:
