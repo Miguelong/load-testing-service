@@ -145,7 +145,7 @@ def start_test(request):
         status = res[0]
         # if the test is already running leave it
         if status == 'running':
-            response_data = {'error': 'The test case is already running.\nPlease wait until it is completed.'}
+            response_data = {'error': 'The test case is already running. Please wait until it is completed.'}
             return produce_fail_response(response_data)
 
         cursor.execute("update load_test set progress=0.0, status='running' where id="+str(test_id))
