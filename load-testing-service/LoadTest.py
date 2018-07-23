@@ -111,7 +111,8 @@ class LoadTest:
         img = str(self.test_id) + "_" + self.tmsp + '_' + title + "_trend.png"
         pl.savefig(os.path.join(self.TEMP_DIR, img))
         pl.close()
-
+        # add figure to document
+        document.add_picture(os.path.join(self.TEMP_DIR, img))
 
         paragraph = document.add_paragraph('')
         run = paragraph.add_run('max:' + str(max) + ' min:' + str(min) + ' average:' + str(average) + '\n\n')
@@ -182,34 +183,34 @@ class LoadTest:
             run.font.size = Pt(12)
 
     def request_get(self, url):
-        # request_start = round(time.time()-self.start)
-        request_start = time.time()-self.start
+        request_start = round(time.time()-self.start, 2)
+        # request_start = time.time()-self.start
         try:
             # r = requests.get(url, timeout=timeout)
             r = requests.get(url)
             json = r.json()
             code = json['meta']['code']
             total_seconds = r.elapsed.total_seconds()
-            return (None, code, total_seconds, request_start)
+            return None, code, total_seconds, request_start
         except Exception, e:
-            return (e, None, None)
+            return e, None, None
 
     def request_post(self, url, payload):
-        # request_start = round(time.time() - self.start)
-        request_start = time.time() - self.start
+        request_start = round(time.time() - self.start, 2)
+        # request_start = time.time() - self.start
         try:
             # r = requests.post(url, json=payload, timeout=timeout)
             r = requests.post(url, json=payload)
             json = r.json()
             code = json['meta']['code']
             total_seconds = r.elapsed.total_seconds()
-            return (None, code, total_seconds,request_start)
+            return None, code, total_seconds,request_start
         except Exception, e:
-            return (e, None, None)
+            return e, None, None
 
     def request_get_proxy(self, url):
-        # request_start = round(time.time() - self.start)
-        request_start = time.time() - self.start
+        request_start = round(time.time() - self.start, 2)
+        # request_start = time.time() - self.start
         try:
             if self.header is None:
                 cmd = "curl -w 'time_total: %{time_total}\n' '" + url + "' -H 'Content-Type:application/json' --proxy " + self.proxy
@@ -225,8 +226,8 @@ class LoadTest:
             return e, None, None
 
     def request_post_proxy(self, url, payload):
-        # request_start = round(time.time() - self.start)
-        request_start = time.time() - self.start
+        request_start = round(time.time() - self.start, 2)
+        # request_start = time.time() - self.start
         try:
             if self.header is None:
                 cmd = "curl -w 'time_total: %{time_total}\n' '" + url + "' -X POST -H 'Content-Type:application/json' -d '" + payload + "' --proxy " + self.proxy
@@ -237,9 +238,9 @@ class LoadTest:
             index = res.find('time_total')
             code = json.loads(res[0:index])['meta']['code']
             total_seconds = float(res[index + 12:].replace("\n", ""))
-            return (None, code, total_seconds, request_start)
+            return None, code, total_seconds, request_start
         except Exception, e:
-            return (e, None, None)
+            return e, None, None
 
     def process_response(self, res, timeout, successQueue, timeoutQueue, failQueue, parameters):
         e = res[0]
