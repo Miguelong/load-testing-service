@@ -88,7 +88,6 @@ class LoadTest:
             bins = 1
 
         plt.hist(data, bins=bins, color='steelblue', edgecolor='k', label='title')
-        plt.title(title)
         plt.xlabel('Response time (s)')
         plt.ylabel('Count')
 
@@ -106,7 +105,8 @@ class LoadTest:
             x.append(ele[0])
             y.append(ele[1])
         pl.plot(x, y, '.')
-        # pl.plot(x, y, 'rd')
+        pl.xlabel('Request start (s)')
+        pl.ylabel('Response time (s)')
 
         img = str(self.test_id) + "_" + self.tmsp + '_' + title + "_trend.png"
         pl.savefig(os.path.join(self.TEMP_DIR, img))
