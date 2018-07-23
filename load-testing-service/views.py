@@ -33,7 +33,7 @@ def produce_fail_response(data):
 def setup(request):
     user = request.POST.get('user')
     testName = request.POST.get('testName')
-
+    description = request.POST.get('description', '')
     url = request.POST.get('apiUrl')
     # print url
     concurrentNum = int(request.POST.get('concurrentNum'))
@@ -53,9 +53,9 @@ def setup(request):
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
-    insertSql="insert load_test (user,testName,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy, parameters)" \
-              " values('%s', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s')" % \
-              (user, testName, url, concurrentNum, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read()))
+    insertSql="insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy, parameters)" \
+              " values('%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s')" % \
+              (user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read()))
 
     try:
         cursor.execute(insertSql)
