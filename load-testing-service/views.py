@@ -236,7 +236,7 @@ def start_test(request):
         timeout_img = prefix + '_Timeout.png'
         timeout_trend_img = prefix + '_trend_Timeout.png'
         try:
-            # os.remove(os.path.join(TEMP_DIR, report))
+            os.remove(os.path.join(TEMP_DIR, report))
             os.remove(os.path.join(TEMP_DIR, success_img))
             os.remove(os.path.join(TEMP_DIR, success_trend_img))
             os.remove(os.path.join(TEMP_DIR, timeout_img))
