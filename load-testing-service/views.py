@@ -79,6 +79,52 @@ def setup(request):
         response_data['testId'] = test_id
         return produce_success_response(response_data)
 
+@csrf_exempt
+def update_test_case(request):
+    id = request.POST.get('testId')
+    user = request.POST.get('user')
+    testName = request.POST.get('testName')
+    description = request.POST.get('description', '')
+    url = request.POST.get('apiUrl')
+    # print url
+    concurrentNum = int(request.POST.get('concurrentNum'))
+    # print concurrentNum
+    method = request.POST.get('apiMethod')
+    # print method
+    header = request.POST.get('apiHeader', '')
+    # print header
+    payload = request.POST.get('apiPayload', '')
+    # print payload
+    timeout = int(request.POST.get('apiTimeout'))
+    # print timeout
+    proxy = request.POST.get('apiProxy', '')
+    # print proxy
+    parameters = request.FILES.get('parameters')
+    # print parameters.size,parameters.name
+
+    db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+    cursor = db.cursor()
+    updateSql = "update load_test set user='%s',testName='%s',description='%s',apiUrl='%s',concurrentNum='%s',apiMethod='%s'," \
+                "apiHeader='%s',apiPayload='%s',apiTimeout='%s',apiProxy='%s', parameters='%s' where id='%s' " % \
+                (user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read()), id)
+
+    try:
+        cursor.execute(updateSql)
+        db.commit()
+
+    except Exception, e:
+        errMessage = repr(e)
+        print errMessage
+        db.rollback()
+
+    db.close()
+
+    response_data = {}
+
+
+    response_data['testId'] = id
+    return produce_success_response(response_data)
+
 
 @csrf_exempt
 def get_all_cases(request):

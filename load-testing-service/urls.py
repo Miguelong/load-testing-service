@@ -20,6 +20,7 @@ import views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^load-test/setup/', views.setup, name='setup'),
+    url(r'^load-test/updateTestCase/', views.update_test_case, name='updateTestCase'),
     url(r'^load-test/startTest/', views.start_test, name='startTest'),
     url(r'^load-test/getAllCases/', views.get_all_cases, name='getAllCases'),
     url(r'^load-test/downloadReport/', views.download_report, name='downloadReport'),
