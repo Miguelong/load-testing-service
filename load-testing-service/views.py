@@ -228,23 +228,40 @@ def start_test(request):
     db.close()
 
     # delete report and images of last test
-    print report
     if report is not None and report != '':
         prefix = report.split('.')[0]
         success_img = prefix + '_Success.png'
-        success_trend_img = prefix + '_trend_Success.png'
+        success_trend_img = prefix + '_Success_trend.png'
         timeout_img = prefix + '_Timeout.png'
-        timeout_trend_img = prefix + '_trend_Timeout.png'
+        timeout_trend_img = prefix + '_Timeout_trend.png'
         try:
-            print os.listdir(TEMP_DIR)
+            os.listdir(TEMP_DIR)
             os.remove(os.path.join(TEMP_DIR, report))
+        except Exception, e:
+            traceback.print_exc(file=sys.stdout)
+
+        try:
+            os.listdir(TEMP_DIR)
             os.remove(os.path.join(TEMP_DIR, success_img))
+        except Exception, e:
+            traceback.print_exc(file=sys.stdout)
+
+        try:
+            os.listdir(TEMP_DIR)
             os.remove(os.path.join(TEMP_DIR, success_trend_img))
+        except Exception, e:
+            traceback.print_exc(file=sys.stdout)
+
+        try:
+            os.listdir(TEMP_DIR)
             os.remove(os.path.join(TEMP_DIR, timeout_img))
+        except Exception, e:
+            traceback.print_exc(file=sys.stdout)
+
+        try:
+            os.listdir(TEMP_DIR)
             os.remove(os.path.join(TEMP_DIR, timeout_trend_img))
         except Exception, e:
-            print os.path.join(TEMP_DIR, report)
-            print repr(e)
             traceback.print_exc(file=sys.stdout)
 
     # parameters_list is a list of parameters that the get or post request requires
