@@ -108,19 +108,24 @@ def update_test_case(request):
     timeout = int(request.POST.get('apiTimeout'))
     proxy = request.POST.get('apiProxy', '')
     parameters = request.FILES.get('parameters')
-    print parameters
-    if parameters is None:
-        print 'No parameters'
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
-    update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s,apiMethod=%s," \
-                 "apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s, parameters=%s where id=%s"
+    # If no parameters file uploaded, keep the original file
+    if parameters is None:
+        update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s,apiMethod=%s," \
+                 "apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s where id=%s"
+    else:
+        update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s,apiMethod=%s," \
+                     "apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s, parameters=%s where id=%s"
 
     try:
-        cursor.execute(update_sql,
-                       [user, test_name, description, url, concurrent_num, method, header, payload, timeout, proxy,
-                        MySQLdb.Binary(parameters.read()), test_id])
+        if parameters is None:
+            cursor.execute(update_sql, [user, test_name, description, url, concurrent_num, method, header, payload,
+                                        timeout, proxy, test_id])
+        else:
+            cursor.execute(update_sql, [user, test_name, description, url, concurrent_num, method, header, payload,
+                                        timeout, proxy, MySQLdb.Binary(parameters.read()), test_id])
         db.commit()
 
     except Exception, e:
