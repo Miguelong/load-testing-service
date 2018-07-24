@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^load-test/updateTestCase/', views.update_test_case, name='updateTestCase'),
     url(r'^load-test/startTest/', views.start_test, name='startTest'),
     url(r'^load-test/getAllCases/', views.get_all_cases, name='getAllCases'),
+    url(r'^load-test/getTestCase/', views.get_test_case, name='getTestCase'),
     url(r'^load-test/downloadReport/', views.download_report, name='downloadReport'),
     url(r'^load-test/stopTest/', views.stop_test, name='stopTest'),
 

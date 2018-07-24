@@ -13,59 +13,42 @@ from LoadTest import *
 matplotlib.use('Agg')
 from django.http import FileResponse
 
-running_tests = {}
 TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'temp')
 
 
 def produce_success_response(data):
-    response_body = {}
-    response_body['meta'] = {'code': 200}
-    response_body['data'] = data
+    response_body = {'meta': {'code': 200}, 'data': data}
     return HttpResponse(json.dumps(response_body), content_type="application/json")
 
 
 def produce_fail_response(data):
-    response_body = {}
-    response_body['meta'] = {'code': 500}
-    response_body['data'] = data
+    response_body = {'meta': {'code': 500}, 'data': data}
     return HttpResponse(json.dumps(response_body), content_type="application/json")
 
 
 @csrf_exempt
 def setup(request):
     user = request.POST.get('user')
-    testName = request.POST.get('testName')
+    test_name = request.POST.get('testName')
     description = request.POST.get('description', '')
     url = request.POST.get('apiUrl')
-    # print url
-    concurrentNum = int(request.POST.get('concurrentNum'))
-    # print concurrentNum
+    concurrent_num = int(request.POST.get('concurrentNum'))
     method = request.POST.get('apiMethod')
-    # print method
     header = request.POST.get('apiHeader', '')
-    # print header
     payload = request.POST.get('apiPayload', '')
-    # print payload
     timeout = int(request.POST.get('apiTimeout'))
-    # print timeout
     proxy = request.POST.get('apiProxy', '')
-    # print proxy
     parameters = request.FILES.get('parameters')
-    # print parameters.size,parameters.name
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
-    # insertSql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy, parameters)" \
-    #             " values('%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s')" % \
-    #             (user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy,
-    #              MySQLdb.Binary(parameters.read()))
 
     insertSql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy, parameters)" \
                 " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
 
     try:
-        cursor.execute(insertSql, [user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read())])
+        cursor.execute(insertSql, [user, test_name, description, url, concurrent_num, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read())])
         test_id = int(db.insert_id())
         print test_id
         db.commit()
@@ -88,27 +71,45 @@ def setup(request):
 
 
 @csrf_exempt
+def get_test_case(request):
+    test_id = request.GET.get('testId')
+    db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+    cursor = db.cursor()
+    cursor.execute("select user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy from load_test where id=" + str(test_id))
+    res = cursor.fetchone()
+    user = res[0]
+    test_name = res[1]
+    description = res[2]
+    url = res[3]
+    concurrent_num = res[4]
+    method = res[5]
+    header = res[6]
+    payload = res[7]
+    timeout = res[8]
+    proxy = res[9]
+
+    response_data={'user': user, 'testName': test_name, 'description': description,
+                   'apiUrl': url, 'concurrentNum': concurrent_num, 'apiMethod': method,
+                   'apiHeader': header, 'apiPayload': payload, 'apiTimeout': timeout, 'apiProxy': proxy}
+    return produce_success_response(response_data)
+
+
+
+
+@csrf_exempt
 def update_test_case(request):
-    id = request.POST.get('testId')
+    test_id = request.POST.get('testId')
     user = request.POST.get('user')
-    testName = request.POST.get('testName')
+    test_name = request.POST.get('testName')
     description = request.POST.get('description', '')
     url = request.POST.get('apiUrl')
-    # print url
-    concurrentNum = int(request.POST.get('concurrentNum'))
-    # print concurrentNum
+    concurrent_num = int(request.POST.get('concurrentNum'))
     method = request.POST.get('apiMethod')
-    # print method
     header = request.POST.get('apiHeader', '')
-    # print header
     payload = request.POST.get('apiPayload', '')
-    # print payload
     timeout = int(request.POST.get('apiTimeout'))
-    # print timeout
     proxy = request.POST.get('apiProxy', '')
-    # print proxy
     parameters = request.FILES.get('parameters')
-    # print parameters.size,parameters.name
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
@@ -117,8 +118,8 @@ def update_test_case(request):
 
     try:
         cursor.execute(update_sql,
-                       [user, testName, description, url, concurrentNum, method, header, payload, timeout, proxy,
-                        MySQLdb.Binary(parameters.read()), id])
+                       [user, test_name, description, url, concurrent_num, method, header, payload, timeout, proxy,
+                        MySQLdb.Binary(parameters.read()), test_id])
         db.commit()
 
     except Exception, e:
@@ -130,7 +131,7 @@ def update_test_case(request):
 
     db.close()
 
-    response_data = {'testId': id}
+    response_data = {'testId': test_id}
     return produce_success_response(response_data)
 
 
@@ -285,10 +286,6 @@ def start_test(request):
     test = LoadTest(url, concurrent_num, method, header, payload, timeout, proxy, parameters_list, test_id)
     test.start_test()
 
-    # put the reference of the object into a global dictionary
-    # the reference is used in case of user want to stop the load test
-    # running_tests[test_id] = test
-
     response_data = {'status': 'running'}
     return produce_success_response(response_data)
 
@@ -296,8 +293,6 @@ def start_test(request):
 @csrf_exempt
 def stop_test(request):
     test_id = int(request.GET.get('testId'))
-    # test = running_tests[test_id]
-    # test.stopTest()
     LoadTest.stop_test(test_id)
     response_data = {'status': 'stopped'}
     return produce_success_response(response_data)
