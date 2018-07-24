@@ -94,8 +94,6 @@ def get_test_case(request):
     return produce_success_response(response_data)
 
 
-
-
 @csrf_exempt
 def update_test_case(request):
     test_id = request.POST.get('testId')
@@ -110,6 +108,9 @@ def update_test_case(request):
     timeout = int(request.POST.get('apiTimeout'))
     proxy = request.POST.get('apiProxy', '')
     parameters = request.FILES.get('parameters')
+    print parameters
+    if parameters is None:
+        print 'No parameters'
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
