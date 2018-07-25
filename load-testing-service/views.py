@@ -79,7 +79,9 @@ def get_test_case(request):
     test_id = request.GET.get('testId')
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
-    cursor.execute("select user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy from load_test where id=" + str(test_id))
+    cursor.execute("select user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,"
+                   "apiProxy,`repeat` from load_test where id=%s" % \
+                   [str(test_id)])
     res = cursor.fetchone()
     user = res[0]
     test_name = res[1]
@@ -91,10 +93,12 @@ def get_test_case(request):
     payload = res[7]
     timeout = res[8]
     proxy = res[9]
+    repeat = res[10]
 
     response_data = {'user': user, 'testName': test_name, 'description': description,
                      'apiUrl': url, 'concurrentNum': concurrent_num, 'apiMethod': method,
-                     'apiHeader': header, 'apiPayload': payload, 'apiTimeout': timeout, 'apiProxy': proxy}
+                     'apiHeader': header, 'apiPayload': payload, 'apiTimeout': timeout,
+                     'apiProxy': proxy, 'repeat': repeat}
     return produce_success_response(response_data)
 
 
