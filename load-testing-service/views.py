@@ -3,6 +3,7 @@ import os
 
 import MySQLdb
 import matplotlib
+from tempfile import TemporaryFile
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import traceback
@@ -39,16 +40,19 @@ def setup(request):
     timeout = int(request.POST.get('apiTimeout'))
     proxy = request.POST.get('apiProxy', '')
     parameters = request.FILES.get('parameters')
+    repeat = int(request.POST.get('repeat', '1'))
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
 
-    insertSql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy, parameters)" \
-                " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-
+    insert_sql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod," \
+                 " apiHeader, apiPayload, apiTimeout,apiProxy, parameters, repeat)" \
+                 " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
     try:
-        cursor.execute(insertSql, [user, test_name, description, url, concurrent_num, method, header, payload, timeout, proxy, MySQLdb.Binary(parameters.read())])
+        cursor.execute(insert_sql,
+                       [user, test_name, description, url, concurrent_num, method, header, payload, timeout, proxy,
+                        MySQLdb.Binary(parameters.read()), repeat])
         test_id = int(db.insert_id())
         print test_id
         db.commit()
@@ -88,9 +92,9 @@ def get_test_case(request):
     timeout = res[8]
     proxy = res[9]
 
-    response_data={'user': user, 'testName': test_name, 'description': description,
-                   'apiUrl': url, 'concurrentNum': concurrent_num, 'apiMethod': method,
-                   'apiHeader': header, 'apiPayload': payload, 'apiTimeout': timeout, 'apiProxy': proxy}
+    response_data = {'user': user, 'testName': test_name, 'description': description,
+                     'apiUrl': url, 'concurrentNum': concurrent_num, 'apiMethod': method,
+                     'apiHeader': header, 'apiPayload': payload, 'apiTimeout': timeout, 'apiProxy': proxy}
     return produce_success_response(response_data)
 
 
@@ -108,24 +112,26 @@ def update_test_case(request):
     timeout = int(request.POST.get('apiTimeout'))
     proxy = request.POST.get('apiProxy', '')
     parameters = request.FILES.get('parameters')
+    repeat = int(request.POST.get('repeat', '1'))
 
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
     # If no parameters file uploaded, keep the original file
     if parameters is None:
-        update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s,apiMethod=%s," \
-                 "apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s where id=%s"
+        update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s," \
+                     "apiMethod=%s, apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s, repeat=%s where id=%s"
     else:
-        update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s,apiMethod=%s," \
-                     "apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s, parameters=%s where id=%s"
+        update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s," \
+                     "apiMethod=%s,apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s,parameters=%s,repeat=%s" \
+                     " where id=%s"
 
     try:
         if parameters is None:
             cursor.execute(update_sql, [user, test_name, description, url, concurrent_num, method, header, payload,
-                                        timeout, proxy, test_id])
+                                        timeout, proxy, repeat, test_id])
         else:
             cursor.execute(update_sql, [user, test_name, description, url, concurrent_num, method, header, payload,
-                                        timeout, proxy, MySQLdb.Binary(parameters.read()), test_id])
+                                        timeout, proxy, MySQLdb.Binary(parameters.read()), repeat, test_id])
         db.commit()
 
     except Exception, e:
@@ -218,7 +224,7 @@ def start_test(request):
         return produce_fail_response(response_data)
 
     # get configuration of the test
-    sql = "select apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy,parameters,report " \
+    sql = "select apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy,parameters,report,repeat " \
           "from load_test where id=" + str(test_id)
     cursor.execute(sql)
     res = cursor.fetchone()
@@ -231,6 +237,8 @@ def start_test(request):
     proxy = res[6]
     parameters = res[7]
     report = res[8]
+    # parameters should be repeated n times
+    repeat = int(res[9])
 
     db.close()
 
@@ -274,9 +282,14 @@ def start_test(request):
     # parameters_list is a list of parameters that the get or post request requires
     lines = parameters.split('\n')
     parameters_list = []
+    incre_list = []
     for line in lines:
         if line != '':
-            parameters_list.append(line)
+            incre_list.append(line)
+
+    # parameters should be repeated n times
+    for i in range(repeat):
+        parameters_list += incre_list
 
     # set to None of empty parameters
     if header == '':
