@@ -47,7 +47,7 @@ def setup(request):
 
     insert_sql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod," \
                  " apiHeader, apiPayload, apiTimeout,apiProxy, parameters, `repeat`)" \
-                 " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                 " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
     try:
         cursor.execute(insert_sql,
