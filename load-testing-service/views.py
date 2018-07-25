@@ -80,8 +80,8 @@ def get_test_case(request):
     db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
     cursor.execute("select user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,"
-                   "apiProxy,`repeat` from load_test where id=%s" % \
-                   [str(test_id)])
+                   "apiProxy,`repeat` from load_test where id=%s" %
+                   str(test_id))
     res = cursor.fetchone()
     user = res[0]
     test_name = res[1]
