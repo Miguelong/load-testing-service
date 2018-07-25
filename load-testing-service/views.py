@@ -46,7 +46,7 @@ def setup(request):
     cursor = db.cursor()
 
     insert_sql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod," \
-                 " apiHeader, apiPayload, apiTimeout,apiProxy, parameters, repeat)" \
+                 " apiHeader, apiPayload, apiTimeout,apiProxy, parameters, `repeat`)" \
                  " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
     try:
@@ -119,10 +119,10 @@ def update_test_case(request):
     # If no parameters file uploaded, keep the original file
     if parameters is None:
         update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s," \
-                     "apiMethod=%s, apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s, repeat=%s where id=%s"
+                     "apiMethod=%s, apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s, `repeat`=%s where id=%s"
     else:
         update_sql = "update load_test set user=%s, testName=%s, description=%s, apiUrl=%s,concurrentNum=%s," \
-                     "apiMethod=%s,apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s,parameters=%s,repeat=%s" \
+                     "apiMethod=%s,apiHeader=%s,apiPayload=%s,apiTimeout=%s,apiProxy=%s,parameters=%s,`repeat`=%s" \
                      " where id=%s"
 
     try:
@@ -224,7 +224,7 @@ def start_test(request):
         return produce_fail_response(response_data)
 
     # get configuration of the test
-    sql = "select apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy,parameters,report,repeat " \
+    sql = "select apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,apiProxy,parameters,report,`repeat` " \
           "from load_test where id=" + str(test_id)
     cursor.execute(sql)
     res = cursor.fetchone()
