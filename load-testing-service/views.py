@@ -42,7 +42,7 @@ def setup(request):
     parameters = request.FILES.get('parameters')
     repeat = int(request.POST.get('repeat', '1'))
 
-    db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+    db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
 
     insert_sql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod," \
@@ -77,7 +77,7 @@ def setup(request):
 @csrf_exempt
 def get_test_case(request):
     test_id = request.GET.get('testId')
-    db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+    db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
     cursor.execute("select user,testName,description,apiUrl,concurrentNum,apiMethod,apiHeader,apiPayload,apiTimeout,"
                    "apiProxy,`repeat` from load_test where id=%s" %
@@ -118,7 +118,7 @@ def update_test_case(request):
     parameters = request.FILES.get('parameters')
     repeat = int(request.POST.get('repeat', '1'))
 
-    db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+    db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
     # If no parameters file uploaded, keep the original file
     if parameters is None:
@@ -159,14 +159,14 @@ def get_all_cases(request):
     start = perPage * (page - 1)
     print start
 
-    db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+    db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
 
     cursor.execute("select count(*) from load_test")
     res = cursor.fetchone()
     totalSize = int(res[0])
 
-    sql = "select id,user,testName,status,progress from load_test order by id limit " + str(start) + "," + str(perPage)
+    sql = "select id,user,testName,status,progress,description from load_test order by id limit " + str(start) + "," + str(perPage)
     cursor.execute(sql)
     results = cursor.fetchall()
     response_data = {}
@@ -177,7 +177,8 @@ def get_all_cases(request):
         testName = row[2]
         status = row[3]
         progress = row[4]
-        list.append({"testId": id, "user": user, "testName": testName, "status": status, "progress": progress})
+        description = row[5]
+        list.append({"testId": id, "user": user, "testName": testName, "status": status, "progress": progress, "description":description})
 
     response_data = {"list": list, "pagination": {"totalSize": totalSize}}
 
@@ -188,7 +189,7 @@ def get_all_cases(request):
 @csrf_exempt
 def download_report(request):
     test_id = request.GET.get('testId')
-    db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+    db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
     cursor.execute("select report from load_test where id=" + str(test_id))
     res = cursor.fetchone()
@@ -208,7 +209,7 @@ def start_test(request):
     test_id = data.get('testId')
 
     # set status of test to 'running'
-    db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+    db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
     try:
         cursor.execute("select status from load_test where id=" + str(test_id))

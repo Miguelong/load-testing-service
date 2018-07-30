@@ -96,7 +96,7 @@ DATABASES = {
         'NAME': 'test',
         'USER': 'demo',
         'PASSWORD': 'RE3u6pc8ZYx1c',
-        'HOST': '10.100.17.151',
+        'HOST': 'model-mysql.internal.gridx.com',
         'PORT': '3306',
     }
 }

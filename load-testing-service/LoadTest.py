@@ -303,7 +303,7 @@ class LoadTest:
             self.process_response(res, timeout, successQueue, timeoutQueue, failQueue, parameters)
 
     def get_progress(self, total_num, successQueue, timeoutQueue, failQueue):
-        db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+        db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
         cursor = db.cursor()
 
         progress = 0.0
@@ -385,7 +385,7 @@ class LoadTest:
 
         # update field 'report' of the record
         try:
-            db = MySQLdb.connect("10.100.17.151", "demo", "RE3u6pc8ZYx1c", "test")
+            db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
             cursor = db.cursor()
             sql = "update load_test set report='%s' where id='%s'" % \
                   (doc, str(self.test_id))
