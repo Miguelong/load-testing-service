@@ -77,7 +77,7 @@ def setup(request):
 
     response_data = {}
 
-    if test_id is None:
+    if 'test_id' in vars():
         response_data['error'] = error
         return produce_fail_response(response_data)
     else:
