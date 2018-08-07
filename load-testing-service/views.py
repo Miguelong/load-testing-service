@@ -45,14 +45,25 @@ def setup(request):
     db = MySQLdb.connect("model-mysql.internal.gridx.com", "demo", "RE3u6pc8ZYx1c", "test")
     cursor = db.cursor()
 
-    insert_sql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod," \
-                 " apiHeader, apiPayload, apiTimeout,apiProxy, parameters, `repeat`)" \
-                 " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    if parameters is None:
+        insert_sql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod," \
+                     " apiHeader, apiPayload, apiTimeout, apiProxy, `repeat`)" \
+                     " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    else:
+        insert_sql = "insert load_test (user,testName,description,apiUrl,concurrentNum,apiMethod," \
+                     " apiHeader, apiPayload, apiTimeout,apiProxy, parameters, `repeat`)" \
+                     " values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 
     try:
-        cursor.execute(insert_sql,
-                       [user, test_name, description, url, concurrent_num, method, header, payload, timeout, proxy,
-                        MySQLdb.Binary(parameters.read()), repeat])
+        if parameters is None:
+            cursor.execute(insert_sql,
+                           [user, test_name, description, url, concurrent_num, method, header, payload, timeout, proxy,
+                            repeat])
+        else:
+            cursor.execute(insert_sql,
+                           [user, test_name, description, url, concurrent_num, method, header, payload, timeout, proxy,
+                            MySQLdb.Binary(parameters.read()), repeat])
+
         test_id = int(db.insert_id())
         print test_id
         db.commit()
@@ -166,7 +177,8 @@ def get_all_cases(request):
     res = cursor.fetchone()
     totalSize = int(res[0])
 
-    sql = "select id,user,testName,status,progress,description from load_test order by id limit " + str(start) + "," + str(perPage)
+    sql = "select id,user,testName,status,progress,description from load_test order by id limit " + str(
+        start) + "," + str(perPage)
     cursor.execute(sql)
     results = cursor.fetchall()
     response_data = {}
@@ -178,7 +190,8 @@ def get_all_cases(request):
         status = row[3]
         progress = row[4]
         description = row[5]
-        list.append({"testId": id, "user": user, "testName": testName, "status": status, "progress": progress, "description":description})
+        list.append({"testId": id, "user": user, "testName": testName, "status": status, "progress": progress,
+                     "description": description})
 
     response_data = {"list": list, "pagination": {"totalSize": totalSize}}
 
