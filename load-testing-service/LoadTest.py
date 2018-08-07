@@ -398,20 +398,33 @@ class LoadTest:
         db.close()
 
     def start_test(self):
-        # split parameters for each thread
+        # allocate parameters for each thread
         parameters = []
-        total_num = len(self.parameters_list)
-        size = total_num / self.concurrent_num
         begin = 0
-        end = size
-        for i in range(self.concurrent_num):
-            if i == self.concurrent_num - 1:
-                end = total_num
+        total_num = len(self.parameters_list)
 
-            arr = self.parameters_list[begin:end]
-            parameters.append(arr)
-            begin = begin + size
-            end = end + size
+        if total_num < self.concurrent_num:
+            size = 1
+            end = size
+            for i in range(self.concurrent_num):
+                if i < total_num:
+                    arr = self.parameters_list[begin:end]
+                    begin = begin + size
+                    end = end + size
+                else:
+                    arr = []
+                parameters.append(arr)
+        else:
+            size = total_num / self.concurrent_num
+            end = size
+            for i in range(self.concurrent_num):
+                if i == self.concurrent_num - 1:
+                    end = total_num
+
+                arr = self.parameters_list[begin:end]
+                parameters.append(arr)
+                begin = begin + size
+                end = end + size
 
         successQueue = Queue.Queue(total_num)
         timeoutQueue = Queue.Queue(total_num)

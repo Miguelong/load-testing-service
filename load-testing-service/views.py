@@ -298,12 +298,16 @@ def start_test(request):
             traceback.print_exc(file=sys.stdout)
 
     # parameters_list is a list of parameters that the get or post request requires
-    lines = parameters.split('\n')
     parameters_list = []
     incre_list = []
-    for line in lines:
-        if line != '':
-            incre_list.append(line)
+
+    if parameters is None:  # the url of get has no parameters
+        incre_list.append('')
+    else:
+        lines = parameters.split('\n')
+        for line in lines:
+            if line != '':
+                incre_list.append(line)
 
     # parameters should be repeated n times
     for i in range(repeat):
