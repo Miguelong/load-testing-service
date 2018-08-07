@@ -302,7 +302,7 @@ def start_test(request):
     incre_list = []
 
     if parameters is None:  # the url of get has no parameters
-        incre_list.append('')
+        incre_list.append('[]')
     else:
         lines = parameters.split('\n')
         for line in lines:
