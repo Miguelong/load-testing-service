@@ -195,6 +195,8 @@ class LoadTest:
             total_seconds = r.elapsed.total_seconds()
             return None, code, total_seconds, request_start
         except Exception, e:
+            error = repr(e)
+            print error
             return e, None, None
 
     def request_post(self, url, payload):
