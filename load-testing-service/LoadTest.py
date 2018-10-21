@@ -187,6 +187,7 @@ class LoadTest:
         # request_start = time.time()-self.start
         try:
             # r = requests.get(url, timeout=timeout)
+            print >> url
             r = requests.get(url)
             json = r.json()
             print >> json
