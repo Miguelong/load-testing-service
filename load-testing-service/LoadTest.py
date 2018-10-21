@@ -187,10 +187,8 @@ class LoadTest:
         # request_start = time.time()-self.start
         try:
             # r = requests.get(url, timeout=timeout)
-            print url
             r = requests.get(url)
             json = r.json()
-            print json
             code = json['meta']['code']
             total_seconds = r.elapsed.total_seconds()
             return None, code, total_seconds, request_start
