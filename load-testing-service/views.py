@@ -217,6 +217,7 @@ def download_report(request):
 
 @csrf_exempt
 def start_test(request):
+    print request.body
     # get testId
     data = json.loads(request.body)
     test_id = data.get('testId')
